@@ -19,7 +19,7 @@ type IsValid<
     ? 1
     : 0
   : 0;
-type RequiredMethods = "create" | "findUnique" | "delete" | "update";
+type RequiredMethods = "create" | "findOne" | "delete" | "update";
 type Filter<T extends Prisma.PrismaClient> = {
   [K in keyof T]-?: {
     1: K;
@@ -111,14 +111,14 @@ export default function PrismaAdapter<
           debug("GET_USER - Fetched from LRU Cache", cachedUser);
           // stale while revalidate
           (async () => {
-            const user = (await prisma[User as "user"].findUnique({
+            const user = (await prisma[User as "user"].findOne({
               where: { id },
             })) as Prisma.User;
             userCache.set(user.id, user);
           })();
           return cachedUser;
         }
-        return prisma[User as "user"].findUnique({ where: { id } });
+        return prisma[User as "user"].findOne({ where: { id } });
       } catch (error) {
         logger.error("GET_USER_BY_ID_ERROR", error);
         // @ts-ignore
@@ -132,7 +132,7 @@ export default function PrismaAdapter<
         if (!email) {
           return null;
         }
-        return prisma[User as "user"].findUnique({
+        return prisma[User as "user"].findOne({
           where: { email },
         }) as Promise<Prisma.User>;
       } catch (error) {
@@ -149,7 +149,7 @@ export default function PrismaAdapter<
       debug("GET_USER_BY_PROVIDER_ACCOUNT_ID", providerId, providerAccountId);
       try {
         if (!providerId || !providerAccountId) return null;
-        const account = await prisma[Account as "account"].findUnique({
+        const account = await prisma[Account as "account"].findOne({
           where: {
             providerId_providerAccountId: {
               providerId: providerId,
@@ -304,7 +304,7 @@ export default function PrismaAdapter<
           debug("GET_SESSION - Fetched from LRU Cache", cachedSession);
           return cachedSession;
         }
-        const session = await prisma[Session as "session"].findUnique({
+        const session = await prisma[Session as "session"].findOne({
           where: { sessionToken: sessionToken },
         });
 
@@ -470,7 +470,7 @@ export default function PrismaAdapter<
           .digest("hex");
         const verificationRequest = await prisma[
           VerificationRequest as "verificationRequest"
-        ].findUnique({
+        ].findOneF({
           where: { 
             identifier_token: {
               identifier: identifier,
